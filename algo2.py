@@ -5,6 +5,7 @@
 import queue
 import threading
 import time
+import math
 from typing import List
 
 _STOP_THREADS: bool = False  # Stop vlag voor threads
@@ -52,7 +53,8 @@ def get_pq_max_min_from_n(n: int, pmax: int, qmax: int, pmin: int, qmin: int) ->
     return n // qmin, n // pmin, n // qmax, n // pmax  # (pmax,qmax,pmin,qmin)
 
 
-def get_final_pq_max_min(n: int, pmax1: int, qmax1: int, pmin1: int, qmin1: int, pmax2: int, qmax2: int, pmin2: int, qmin2: int) -> (int, int, int, int):
+def get_final_pq_max_min(n: int, pmax1: int, qmax1: int, pmin1: int, qmin1: int, pmax2: int, qmax2: int, pmin2: int,
+                         qmin2: int) -> (int, int, int, int):
     """
     getpqmaxmin() en getpqmaxminfromn() conbineren.
     Eerst getpqmaxmin() [1] en dan getpqmaxminfromn() [2]
@@ -194,6 +196,7 @@ def zoek_pq_lus(n: int, max: int, min: int, aantal_threads: int = 1) -> int:
     return pq
 
 
+# Testen van algoritmes
 def get_max_iter(max: int, min: int) -> int:
     """ Geeft het aantal nummers weer die moeten overlopen worden om een priemgetal te bereiken """
     return (max - min) // 2
@@ -207,7 +210,22 @@ def compare(p: int, q: int, pmax: int, qmax: int, pmin: int, qmin: int) -> None:
     print("q > qmin => {}".format(q > qmin))
 
 
-def init(n: int, nbits: int, aantal_threads: int =1) -> int:
+def get_time_needed_from_n(n: int, nbits: int, processor_ticks_per_uur: int) -> float:
+    """ Geeft de maximale tijd in uren weer nodig om een priemgetal te berekenen """
+    grens: int = pow(2, (15 * nbits) // 16)
+    qmin = pow(2, (15 * nbits - 32) // 32)
+
+    aantal_nummers = 0
+    if n < grens:  # Dit pad zal nooit worden gebruikt omdat nmin nooit onder de grens zal liggen
+        aantal_nummers = isqrt(n) - qmin
+    else:
+        aantal_nummers = pow(2, (15 * nbits) // 32) - qmin
+
+    #return math.log(aantal_nummers, 2) - processor_ticks_per_uur
+    return aantal_nummers // pow(2, processor_ticks_per_uur)
+
+
+def init(n: int, nbits: int, aantal_threads: int = 1) -> int:
     """ Voert bovenstaande functies uit en zoekt naar een priemgetal """
     pq1 = get_pq_max_min(nbits)
     pq_from_n = get_pq_max_min_from_n(n, *pq1)
